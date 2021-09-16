@@ -2,14 +2,14 @@ package ooo.sansk.sansbot.module.pokedex;
 
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.MessageBuilder;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionMapping;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import nl.imine.vaccine.annotation.Component;
 import ooo.sansk.sansbot.command.ChatCommand;
 import ooo.sansk.sansbot.command.ChatCommandHandler;
 
-import java.awt.*;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -27,31 +27,39 @@ public class PokemonCommand extends ChatCommand {
     }
 
     @Override
-    public List<String> getTriggers() {
-        return Arrays.asList("Pokedex", "Pokédex", "Pokemon", "Pokémon");
+    public CommandData getCommandData() {
+        final var commandData = new CommandData("pokédex", "Get Pokédex data for a Pokémon");
+        commandData.addOption(OptionType.STRING, "pokémon", "The Pokémon to get the dex data for", true);
+        return commandData;
     }
 
     @Override
-    public void handle(MessageReceivedEvent messageReceivedEvent) {
-        if (messageReceivedEvent.getMessage().getContentRaw().split(" ").length > 1)
-            executorService.submit(() -> {
-                Optional<Pokemon> oPokemon = pokedexAPI.getPokemon(messageReceivedEvent.getMessage().getContentRaw().split(" ")[1].toLowerCase());
-                if (oPokemon.isPresent()) {
-                    Pokemon pokemon = oPokemon.get();
-                    EmbedBuilder embedBuilder = new EmbedBuilder().setAuthor("Pokédex", PokedexAPI.BASE_URL, PokedexAPI.POKEDEX_ICON)
-                            .setTitle(String.format("#%s: %s", String.valueOf(pokemon.getId()), capitalize(pokemon.getName())))
-                            .addField("Primary Type", capitalize(pokemon.getPrimaryType().name()), true);
-                    pokemon.getSecondaryType().ifPresent(type -> embedBuilder.addField("Secondary Type", capitalize(type.name()), true));
-                    embedBuilder.addField("Description", pokemon.getDescription(), false)
-                            .setThumbnail(pokemon.getSpriteUrl())
-                            .setColor(pokemon.getPrimaryType().getColor())
-                            .setFooter("Pokédex data retrieved from " + PokedexAPI.BASE_URL, PokedexAPI.POKEDEX_ICON);
-                    messageReceivedEvent.getChannel().sendMessage(new MessageBuilder(embedBuilder).build()).queue();
-                } else {
-                    messageReceivedEvent.getChannel().sendMessage(new MessageBuilder("Pokemon not found").build()).queue();
-                }
-            });
-        deleteMessageIfPossible(messageReceivedEvent.getMessage());
+    public void handle(SlashCommandEvent event) {
+        final var pokemonOption = event.getOption("pokémon");
+        if (pokemonOption == null) {
+            event.reply("Je wat wil je nou, er zijn meer pokémon dan alleen Pikachu hè?!").queue();
+            return;
+        }
+
+        event.reply("Reading Pokédex...").queue();
+
+        executorService.submit(() -> {
+            Optional<Pokemon> oPokemon = pokedexAPI.getPokemon(event.getOptions().get(0).getAsString().toLowerCase());
+            if (oPokemon.isPresent()) {
+                var pokemon = oPokemon.get();
+                var embedBuilder = new EmbedBuilder().setAuthor("Pokédex", PokedexAPI.BASE_URL, PokedexAPI.POKEDEX_ICON)
+                    .setTitle(String.format("#%s: %s", pokemon.id(), capitalize(pokemon.name())))
+                    .addField("Primary Type", capitalize(pokemon.primaryType().name()), true);
+                pokemon.getSecondaryType().ifPresent(type -> embedBuilder.addField("Secondary Type", capitalize(type.name()), true));
+                embedBuilder.addField("Description", pokemon.description(), false)
+                    .setThumbnail(pokemon.spriteUrl())
+                    .setColor(pokemon.primaryType().getColor())
+                    .setFooter("Pokédex data retrieved from " + PokedexAPI.BASE_URL, PokedexAPI.POKEDEX_ICON);
+                event.getInteraction().getHook().editOriginalEmbeds(embedBuilder.build()).queue();
+            } else {
+                event.getInteraction().getHook().editOriginal(new MessageBuilder("Pokemon not found").build()).queue();
+            }
+        });
     }
 
     private String capitalize(String string) {

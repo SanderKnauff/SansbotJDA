@@ -1,7 +1,9 @@
 package ooo.sansk.sansbot.command;
 
 import net.dv8tion.jda.api.entities.*;
+import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.requests.restaction.AuditableRestAction;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import net.dv8tion.jda.internal.entities.GuildImpl;
@@ -99,53 +101,6 @@ public class ChatCommandTest {
         verify(mockAuditableRestAction).queue();
     }
 
-    @Test
-    public void replySendToDefaultChannelIfNotInPrivateConversation() {
-        var messageCaptor = ArgumentCaptor.forClass(Message.class);
-        var mockOriginalChannel = mock(MessageChannel.class);
-        var mockMessageAction = mock(MessageAction.class);
-        var mockDefaultChannel = mock(TextChannel.class);
-        doReturn(mockDefaultChannel).when(mockChatCommandHandler).getDefaultOutputChannel();
-        doReturn(mockMessageAction).when(mockDefaultChannel).sendMessage(messageCaptor.capture());
-        doReturn(ChannelType.TEXT).when(mockOriginalChannel).getType();
-
-        subject.reply(mockOriginalChannel, MESSAGE_REPLY);
-
-        verify(mockMessageAction).queue();
-        assertThat(messageCaptor.getValue(), is(not(nullValue())));
-        assertThat(messageCaptor.getValue().getContentRaw(), is(equalTo(MESSAGE_REPLY)));
-    }
-
-    @Test
-    public void replySendToOriginalChannelWhenInGroupChat() {
-        var messageCaptor = ArgumentCaptor.forClass(Message.class);
-        var mockOriginalChannel = mock(MessageChannel.class);
-        var mockMessageAction = mock(MessageAction.class);
-        doReturn(mockMessageAction).when(mockOriginalChannel).sendMessage(messageCaptor.capture());
-        doReturn(ChannelType.GROUP).when(mockOriginalChannel).getType();
-
-        subject.reply(mockOriginalChannel, MESSAGE_REPLY);
-
-        verify(mockMessageAction).queue();
-        assertNotNull(messageCaptor.getValue());
-        assertEquals(messageCaptor.getValue().getContentRaw(), MESSAGE_REPLY);
-    }
-
-    @Test
-    public void replySendToOriginalChannelWhenInPrivateChat() {
-        var messageCaptor = ArgumentCaptor.forClass(Message.class);
-        var mockOriginalChannel = mock(MessageChannel.class);
-        var mockMessageAction = mock(MessageAction.class);
-        doReturn(mockMessageAction).when(mockOriginalChannel).sendMessage(messageCaptor.capture());
-        doReturn(ChannelType.PRIVATE).when(mockOriginalChannel).getType();
-
-        subject.reply(mockOriginalChannel, MESSAGE_REPLY);
-
-        verify(mockMessageAction).queue();
-        assertThat(messageCaptor.getValue(), notNullValue());
-        assertThat(messageCaptor.getValue().getContentRaw(), equalTo(MESSAGE_REPLY));
-    }
-
     private static class TestCommand extends ChatCommand {
 
         public TestCommand(ChatCommandHandler chatCommandHandler) {
@@ -153,14 +108,12 @@ public class ChatCommandTest {
         }
 
         @Override
-        public List<String> getTriggers() {
-            return null;
+        public CommandData getCommandData() {
+            return new CommandData("", "");
         }
 
         @Override
-        public void handle(MessageReceivedEvent messageReceivedEvent) {
-
+        public void handle(SlashCommandEvent event) {
         }
     }
-
 }

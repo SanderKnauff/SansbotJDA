@@ -1,12 +1,10 @@
 package ooo.sansk.sansbot.module.music.commands;
 
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import nl.imine.vaccine.annotation.Component;
 import ooo.sansk.sansbot.command.ChatCommandHandler;
 import ooo.sansk.sansbot.module.music.TrackListManager;
-
-import java.util.Arrays;
-import java.util.List;
 
 @Component
 public class SkipTrackChatCommand extends AbstractMusicChatCommand {
@@ -19,18 +17,17 @@ public class SkipTrackChatCommand extends AbstractMusicChatCommand {
     }
 
     @Override
-    public List<String> getTriggers() {
-        return Arrays.asList("skip", "next", "WatEenPokkeHerrie", "HebJeNogIetsBeters");
+    public CommandData getCommandData() {
+        return new CommandData("skip", "Skip the current track");
     }
 
     @Override
-    public void handle(MessageReceivedEvent messageReceivedEvent) {
-        deleteMessageIfPossible(messageReceivedEvent.getMessage());
-        if (isInSameChannel(messageReceivedEvent.getMember(), messageReceivedEvent.getGuild())) {
-            chatCommandHandler.getDefaultOutputChannel().sendMessage(String.format("Ik kon hier wel van genieten, %s alleen niet. ¯\\_(ツ)_/¯ Ander plaatje dan maar?", messageReceivedEvent.getAuthor().getAsMention())).queue();
+    public void handle(SlashCommandEvent event) {
+        if (isInSameChannel(event.getMember(), event.getGuild())) {
+            event.reply(String.format("Ik kon hier wel van genieten, %s alleen niet. ¯\\_(ツ)_/¯ Ander plaatje dan maar?", event.getMember().getAsMention())).queue();
             trackListManager.skip();
         } else {
-            reply(messageReceivedEvent.getChannel(), String.format("Well %s, jij hebt hier toch geen last van. Laat ze lekker luisteren wat ze willen als je het toch niet kan horen... :rolling_eyes:", messageReceivedEvent.getAuthor().getAsMention()));
+            event.reply(String.format("Well %s, jij hebt hier toch geen last van. Laat ze lekker luisteren wat ze willen als je het toch niet kan horen... :rolling_eyes:", event.getMember().getAsMention())).queue();
         }
     }
 }

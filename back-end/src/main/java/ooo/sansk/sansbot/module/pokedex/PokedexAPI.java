@@ -1,7 +1,6 @@
 package ooo.sansk.sansbot.module.pokedex;
 
 import nl.imine.vaccine.annotation.Component;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -22,13 +21,13 @@ public class PokedexAPI {
 
     public Optional<Pokemon> getPokemon(String pokemonId) {
         try {
-            URL url = new URL(POKEMON_ENDPOINT + pokemonId);
-            JSONObject jsonObject = new JSONObject(readStringFromURL(url));
+            var url = new URL(POKEMON_ENDPOINT + pokemonId);
+            var jsonObject = new JSONObject(readStringFromURL(url));
             PokemonType primaryType = null;
             PokemonType secondaryType = null;
             for (Object typeObject : jsonObject.getJSONArray("types")) {
                 JSONObject typeJson = ((JSONObject) typeObject);
-                int slot = typeJson.getInt("slot");
+                var slot = typeJson.getInt("slot");
                 if (slot == 1) {
                     primaryType = PokemonType.valueOf(typeJson.getJSONObject("type").getString("name").toUpperCase());
                 } else {
@@ -49,17 +48,17 @@ public class PokedexAPI {
     }
 
     private PokemonSpecies getPokemonDexDescription(String pokemonId) throws IOException {
-        URL url = new URL(SPECIES_ENDPOINT + pokemonId);
-        JSONObject jsonObject = new JSONObject(readStringFromURL(url));
+        var url = new URL(SPECIES_ENDPOINT + pokemonId);
+        var jsonObject = new JSONObject(readStringFromURL(url));
 
         return new PokemonSpecies(getGenus(jsonObject), getRandomFlavorText(jsonObject));
     }
 
     private String getRandomFlavorText(JSONObject jsonObject) {
         List<PokemonFlavorText> flavorTextList = new ArrayList<>();
-        JSONArray flavorTextJsonArray = jsonObject.getJSONArray("flavor_text_entries");
-        for (int i = 0; i < flavorTextJsonArray.length(); i++) {
-            JSONObject flavorTextObject = flavorTextJsonArray.getJSONObject(i);
+        var flavorTextJsonArray = jsonObject.getJSONArray("flavor_text_entries");
+        for (var i = 0; i < flavorTextJsonArray.length(); i++) {
+            var flavorTextObject = flavorTextJsonArray.getJSONObject(i);
             if(flavorTextObject.getJSONObject("language").getString("name").equals("en")) {
                 flavorTextList.add(new PokemonFlavorText(flavorTextObject.getJSONObject("version").getString("name"),
                         flavorTextObject.getJSONObject("language").getString("name"),
@@ -67,13 +66,13 @@ public class PokedexAPI {
                 ));
             }
         }
-        return flavorTextList.get(random.nextInt(flavorTextList.size())).getText();
+        return flavorTextList.get(random.nextInt(flavorTextList.size())).text();
     }
 
     private String getGenus(JSONObject jsonObject) {
-        JSONArray genusArray = jsonObject.getJSONArray("genera");
-        for (int i = 0; i < genusArray.length(); i++) {
-            JSONObject genusObject = genusArray.getJSONObject(i);
+        var genusArray = jsonObject.getJSONArray("genera");
+        for (var i = 0; i < genusArray.length(); i++) {
+            var genusObject = genusArray.getJSONObject(i);
             if(genusObject.getJSONObject("language").getString("name").equals("en")) {
                 return genusObject.getString("genus");
             }
@@ -82,7 +81,7 @@ public class PokedexAPI {
     }
 
     private String readStringFromURL(URL url) throws IOException {
-        try (Scanner scanner = new Scanner(url.openStream(),
+        try (var scanner = new Scanner(url.openStream(),
                 StandardCharsets.UTF_8.toString())) {
             scanner.useDelimiter("\\A");
             return scanner.hasNext() ? scanner.next() : "";

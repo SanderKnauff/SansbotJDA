@@ -1,6 +1,8 @@
 package ooo.sansk.sansbot.module.music.commands;
 
+import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import nl.imine.vaccine.annotation.Component;
 import ooo.sansk.sansbot.command.ChatCommandHandler;
 import ooo.sansk.sansbot.module.music.TrackListManager;
@@ -19,30 +21,29 @@ public class MoveChannelCommand extends AbstractMusicChatCommand {
     }
 
     @Override
-    public List<String> getTriggers() {
-        return Arrays.asList("requestbot", "movesansbot", "sansbotplz", "geefsansbot");
+    public CommandData getCommandData() {
+        return new CommandData("sansbotplz", "Summons the bot to your channel");
     }
 
     @Override
-    public void handle(MessageReceivedEvent messageReceivedEvent) {
-        deleteMessageIfPossible(messageReceivedEvent.getMessage());
-        if (!messageReceivedEvent.getGuild().getSelfMember().getVoiceState().inVoiceChannel()) {
-            reply(messageReceivedEvent.getChannel(), String.format("Sorry %s, ik ben even niet beschikbaar voor je feestje... :disappointed:", messageReceivedEvent.getAuthor().getAsMention()));
+    public void handle(SlashCommandEvent event) {
+        if (!event.getGuild().getSelfMember().getVoiceState().inVoiceChannel()) {
+            event.reply(String.format("Sorry %s, ik ben even niet beschikbaar voor je feestje... :disappointed:", event.getMember().getAsMention())).queue();
             return;
         }
-        if (messageReceivedEvent.getGuild().getSelfMember().getVoiceState().getChannel().equals(messageReceivedEvent.getMember().getVoiceState().getChannel())) {
-            reply(messageReceivedEvent.getChannel(), String.format("Uhh, volgensmij ben ik er al hoor, %s? :thinking:", messageReceivedEvent.getAuthor().getAsMention()));
+        if (event.getGuild().getSelfMember().getVoiceState().getChannel().equals(event.getMember().getVoiceState().getChannel())) {
+            event.reply(String.format("Uhh, volgensmij ben ik er al hoor, %s? :thinking:", event.getMember().getAsMention())).queue();
             return;
         }
-        if (!messageReceivedEvent.getMember().getVoiceState().inVoiceChannel()) {
-            reply(messageReceivedEvent.getChannel(), String.format("Zeg %s, je zit helemaal niet in een kanaal. Hoe moet ik nu weten waar ik naartoe moet?! :confused:", messageReceivedEvent.getAuthor().getAsMention()));
+        if (!event.getMember().getVoiceState().inVoiceChannel()) {
+            event.reply(String.format("Zeg %s, je zit helemaal niet in een kanaal. Hoe moet ik nu weten waar ik naartoe moet?! :confused:", event.getMember().getAsMention())).queue();
             return;
         }
         if (trackListManager.getCurrentTrack() != null) {
-            reply(messageReceivedEvent.getChannel(), String.format("Sorry, anderen waren eerst en die zijn nog aan het genieten van de muziek. Probeer het anders later nog eens, %s? :upside_down:", messageReceivedEvent.getAuthor().getAsMention()));
+            event.reply(String.format("Sorry, anderen waren eerst en die zijn nog aan het genieten van de muziek. Probeer het anders later nog eens, %s? :upside_down:", event.getMember().getAsMention())).queue();
             return;
         }
-        reply(messageReceivedEvent.getChannel(), String.format("Ik kom al! %s :yum:", messageReceivedEvent.getAuthor().getAsMention()));
-        messageReceivedEvent.getGuild().getAudioManager().openAudioConnection(messageReceivedEvent.getMember().getVoiceState().getChannel());
+        event.reply(String.format("Ik kom al! %s :yum:", event.getMember().getAsMention())).queue();
+        event.getGuild().getAudioManager().openAudioConnection(event.getMember().getVoiceState().getChannel());
     }
 }

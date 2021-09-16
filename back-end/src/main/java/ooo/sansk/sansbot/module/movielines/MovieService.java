@@ -52,6 +52,7 @@ public class MovieService {
             logger.warn("Just {} movies have been loaded from disk. This game requires at least 3 to work.", movies.size());
             return;
         }
+        logger.info("Loaded {} movies from disk", movies.size());
         ready = true;
     }
 
@@ -59,7 +60,7 @@ public class MovieService {
         try {
             return objectMapper.readValue(Files.newInputStream(file), Movie.class);
         } catch (IOException e) {
-            logger.warn("{} failed to load.", file.toAbsolutePath().toString(), e);
+            logger.warn("{} failed to load.", file.toAbsolutePath(), e);
         }
         return new Movie("Failed to load", Collections.emptyList());
     }

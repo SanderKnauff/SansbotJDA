@@ -47,8 +47,8 @@ public class LoginServiceTest {
         subject.createWebToken(USER_ID);
 
         assertThat(subject.getRequestedTokens(), hasSize(1));
-        assertThat(subject.getRequestedTokens().get(0).getUserId(), equalTo(USER_ID));
-        assertEquals(Instant.EPOCH.plusSeconds(60 * 15), subject.getRequestedTokens().get(0).getExpirationTime().toInstant());
+        assertThat(subject.getRequestedTokens().get(0).userId(), equalTo(USER_ID));
+        assertEquals(Instant.EPOCH.plusSeconds(60 * 15), subject.getRequestedTokens().get(0).expirationTime().toInstant());
     }
 
     @Test
@@ -60,8 +60,8 @@ public class LoginServiceTest {
         subject.createWebToken(USER_ID);
 
         assertThat(subject.getRequestedTokens(), hasSize(2));
-        assertThat(subject.getRequestedTokens().get(1).getUserId(), equalTo(USER_ID));
-        assertEquals(Instant.EPOCH.plusSeconds(60 * 15), subject.getRequestedTokens().get(1).getExpirationTime().toInstant());
+        assertThat(subject.getRequestedTokens().get(1).userId(), equalTo(USER_ID));
+        assertEquals(Instant.EPOCH.plusSeconds(60 * 15), subject.getRequestedTokens().get(1).expirationTime().toInstant());
     }
 
     @Test
@@ -94,6 +94,7 @@ public class LoginServiceTest {
         doReturn(mockSession).when(mockRequest).session();
         doReturn(USER_IP).when(mockRequest).ip();
         doNothing().when(mockSession).attribute(eq(SessionFilter.SESSION_INFORMATION), sessionDataCaptor.capture());
+
         subject.getRequestedTokens().add(new WebToken(ZonedDateTime.now(fixedClock).plusMinutes(15), USER_ID, "000000"));
 
         Optional<WebUserDetails> result = subject.attemptLogin(mockRequest, "000000");
@@ -101,8 +102,8 @@ public class LoginServiceTest {
         assertTrue(result.isPresent());
         WebUserDetails details = result.get();
         SessionInformation sessionInformation = sessionDataCaptor.getValue();
-        assertSame(USER_NAME, details.getUsername());
-        assertEquals(USER_AVATAR_URL, details.getAvatarUrl());
+        assertSame(USER_NAME, details.username());
+        assertEquals(USER_AVATAR_URL, details.avatarUrl());
         //I would have used assertEquals, but this is a nice example what you can do but just shouldn't
         assertFalse(!USER_IP.equals(sessionInformation.getIp()));
     }

@@ -32,13 +32,13 @@ public class MovieGameManager {
         LinkedList<Movie> movies = new LinkedList<>(movieService.getMovies());
         Collections.shuffle(movies);
 
-        Movie winning = movies.pop();
+        var winning = movies.pop();
         Queue<Line> lines = new LinkedList<>();
-        int startingPoint = random.nextInt(winning.getLines().size() - LINE_COUNT);
-        for (int i = startingPoint; i < startingPoint + LINE_COUNT; i++) {
+        var startingPoint = random.nextInt(winning.getLines().size() - LINE_COUNT);
+        for (var i = startingPoint; i < startingPoint + LINE_COUNT; i++) {
             lines.add(winning.getLines().get(i));
         }
-        final MovieLinesGame newGame = new MovieLinesGame(null, winning, movies.pop(), movies.pop(), lines, null,false);
+        final var newGame = new MovieLinesGame(null, winning, movies.pop(), movies.pop(), lines, false);
         activeGames.add(newGame);
         return Optional.of(newGame);
     }

@@ -1,12 +1,10 @@
 package ooo.sansk.sansbot.module.music.commands;
 
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import nl.imine.vaccine.annotation.Component;
 import ooo.sansk.sansbot.command.ChatCommandHandler;
 import ooo.sansk.sansbot.module.music.TrackListManager;
-
-import java.util.Arrays;
-import java.util.List;
 
 @Component
 public class PauseTrackChatCommand extends AbstractMusicChatCommand {
@@ -19,21 +17,20 @@ public class PauseTrackChatCommand extends AbstractMusicChatCommand {
     }
 
     @Override
-    public List<String> getTriggers() {
-        return Arrays.asList("pause", "pauze", "halt", "IkVerstaJeNiet", "AlleAandachtNaarMij");
+    public CommandData getCommandData() {
+        return new CommandData("pause", "Pauses the track");
     }
 
     @Override
-    public void handle(MessageReceivedEvent messageReceivedEvent) {
-        deleteMessageIfPossible(messageReceivedEvent.getMessage());
-        if(isInSameChannel(messageReceivedEvent.getMember(), messageReceivedEvent.getGuild())) {
+    public void handle(SlashCommandEvent event) {
+        if(isInSameChannel(event.getMember(), event.getGuild())) {
             if (trackListManager.pause()) {
-                reply(messageReceivedEvent.getChannel(), String.format("Stop de plaat! %s heeft iets belangrijks te melden!", messageReceivedEvent.getAuthor().getAsMention()));
+                event.reply(String.format("Stop de plaat! %s heeft iets belangrijks te melden!", event.getMember().getAsMention())).queue();
             } else {
-                reply(messageReceivedEvent.getChannel(), String.format("Er valt helemaal niks te pauzeren, %s!", messageReceivedEvent.getAuthor().getAsMention()));
+                event.reply(String.format("Er valt helemaal niks te pauzeren, %s!", event.getMember().getAsMention())).queue();
             }
         } else {
-            reply(messageReceivedEvent.getChannel(), String.format("Zeg %s, we gaan niet de lol van andere verzieken als je er toch geen last van hebt... :angry:", messageReceivedEvent.getAuthor().getAsMention()));
+            event.reply(String.format("Zeg %s, we gaan niet de lol van andere verzieken als je er toch geen last van hebt... :angry:", event.getMember().getAsMention())).queue();
         }
     }
 }

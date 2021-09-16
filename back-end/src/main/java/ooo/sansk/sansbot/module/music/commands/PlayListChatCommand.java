@@ -3,16 +3,12 @@ package ooo.sansk.sansbot.module.music.commands;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.MessageBuilder;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import nl.imine.vaccine.annotation.Component;
 import ooo.sansk.sansbot.command.ChatCommand;
 import ooo.sansk.sansbot.command.ChatCommandHandler;
 import ooo.sansk.sansbot.module.music.TrackListManager;
-
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
 
 @Component
 public class PlayListChatCommand extends ChatCommand {
@@ -25,27 +21,21 @@ public class PlayListChatCommand extends ChatCommand {
     }
 
     @Override
-    public List<String> getTriggers() {
-        return Arrays.asList("playlist", "tracks", "commingup", "KomtErNogWatLeuksAan");
+    public CommandData getCommandData() {
+        return new CommandData("playlist",  "Show the tracks in the queue");
     }
 
     @Override
-    public void handle(MessageReceivedEvent messageReceivedEvent) {
-        deleteMessageIfPossible(messageReceivedEvent.getMessage());
+    public void handle(SlashCommandEvent event) {
         if(!trackListManager.getQueue().isEmpty()) {
-            EmbedBuilder embedBuilder = new EmbedBuilder().setTitle(":cd: PlayList");
+            var embedBuilder = new EmbedBuilder().setTitle(":cd: PlayList");
             trackListManager.getQueue().stream()
                     .limit(25)
                     .map(AudioTrack::getInfo)
                     .forEach(track -> embedBuilder.addField(track.title + " | " + track.length, track.author + " (" + track.uri + ")", false));
-            reply(messageReceivedEvent.getChannel(), new MessageBuilder(String.format("Hier %s, dit zijn nummers die er nog aan zullen komen!", messageReceivedEvent.getAuthor().getAsMention())).setEmbed(embedBuilder.build()).build());
+            event.reply(new MessageBuilder(String.format("Hier %s, dit zijn nummers die er nog aan zullen komen!", event.getMember().getAsMention())).setEmbeds(embedBuilder.build()).build()).queue();
         } else {
-            reply(messageReceivedEvent.getChannel(), String.format("Sorry %s, maar er staat nog niks op de lijst. Misschien kan je zelf wat toevoegen!", messageReceivedEvent.getAuthor().getAsMention()));
+            event.reply(String.format("Sorry %s, maar er staat nog niks op de lijst. Misschien kan je zelf wat toevoegen!", event.getMember().getAsMention())).queue();
         }
-    }
-
-    public String getReadableTimeString(long millis) {
-        Date resultDate = new Date(millis);
-        return new SimpleDateFormat("HH:mm:ss").format(resultDate);
     }
 }

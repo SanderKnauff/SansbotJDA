@@ -33,7 +33,7 @@ public class MessageListener implements EventListener {
             return;
         }
         int attachmentCount = ((MessageReceivedEvent) event).getMessage().getAttachments().size();
-        MessageReceivedEvent messageReceivedEvent = (MessageReceivedEvent) event;
+        var messageReceivedEvent = (MessageReceivedEvent) event;
         logger.info("{} sent with {} attachments: \"{}\"", messageReceivedEvent.getAuthor().getName(), attachmentCount, messageReceivedEvent.getMessage().getContentDisplay());
         if(((MessageReceivedEvent) event).getMessage().getContentStripped().equals("Zeg kan jij een koprol voor ons doen?")) {
             ((MessageReceivedEvent) event).getChannel().sendMessage("Wat denk je dat ik ben, een verdraaide acrobaat?!").submit();

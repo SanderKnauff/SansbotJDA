@@ -1,7 +1,10 @@
 package ooo.sansk.sansbot.module.image;
 
 import net.dv8tion.jda.api.entities.Message;
+import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.api.requests.restaction.MessageAction;
 import nl.imine.vaccine.annotation.Component;
 import ooo.sansk.sansbot.command.ChatCommand;
@@ -21,50 +24,46 @@ import java.util.Optional;
 public class ConvertImageCommand extends ChatCommand {
 
     private static final int MAX_FILE_SIZE_BYTES = 8388608;
+    public static final String OPTION_NAME_FILTER = "filter";
 
     public ConvertImageCommand(ChatCommandHandler chatCommandHandler) {
         super(chatCommandHandler);
     }
 
     @Override
-    public List<String> getTriggers() {
-        return Arrays.asList("i", "convert");
+    public CommandData getCommandData() {
+        final var commandData = new CommandData("convertimage", "Applies a filter to an image");
+        commandData.addOption(OptionType.STRING, OPTION_NAME_FILTER, "The name of the filter to apply", true);
+        return commandData;
     }
 
     @Override
-    public void handle(MessageReceivedEvent messageReceivedEvent) {
-        String[] args = messageReceivedEvent.getMessage().getContentRaw().split(" ");
-        if(args.length < 2) {
-            reply(messageReceivedEvent.getChannel(), "Ik heb geen idee wat je van me mot, %s...");
-            return;
-        }
-        if(args.length > 3) {
-            reply(messageReceivedEvent.getChannel(), "Ja ehh, niet zoveel tegelijk hè, %s");
-            return;
-        }
+    public void handle(SlashCommandEvent event) {
+        var filterOption = event.getOption(OPTION_NAME_FILTER);
 
-        Optional<ImageFilter> oFilter = FilterType.getFilter(args[1]).map(FilterType::getFilter);
-        if (oFilter.isEmpty()) {
-            reply(messageReceivedEvent.getChannel(), "Ik kan een hoop, maar dat nou net weer niet. %s");
+        var optionalFilter = FilterType.getFilter(filterOption.getAsString()).map(FilterType::getFilter);
+        if (optionalFilter.isEmpty()) {
+            event.reply("Ik kan een hoop, maar dat nou net weer niet.").queue();
             return;
         }
 
-        messageReceivedEvent.getChannel().getHistory().retrievePast(10).queue(messages -> {
-            Optional<BufferedImage> oBufferedImage = getFirstLoadedMessageWithImageAttachment(messages);
+        event.deferReply().queue();
 
-            if (oBufferedImage.isPresent()) {
-                ImageResult imageResult = oFilter.get().doFilter(oBufferedImage.get());
-                if (imageResult.getImageData().length < MAX_FILE_SIZE_BYTES) {
-                    MessageAction messageAction = messageReceivedEvent.getChannel().sendFile(imageResult.getImageData(), "output." + imageResult.getImageType());
-                    if (messageReceivedEvent.getChannel().getType().isGuild()) {
-                        messageAction = messageAction.content(messageReceivedEvent.getMember().getAsMention());
-                    }
-                    messageAction.submit();
-                } else {
-                    reply(messageReceivedEvent.getChannel(), String.format("Oh nee! deze is te groot voor mij, %s :confounded:", messageReceivedEvent.getAuthor().getAsMention()));
+        event.getChannel().getHistory().retrievePast(10).queue(messages -> {
+            var optionalBufferedImage = getFirstLoadedMessageWithImageAttachment(messages);
+            if (optionalBufferedImage.isEmpty()) {
+                event.getHook().editOriginal(String.format("Ge snappe het volgensmij niet helemaal hè, %s. Ge motten wel een plaatje erbij uploaden hè? :angry:", event.getMember().getAsMention())).queue();
+            }
+            var imageResult = optionalFilter.get().doFilter(optionalBufferedImage.get());
+
+            if (imageResult.imageData().length < MAX_FILE_SIZE_BYTES) {
+                var messageAction = event.getChannel().sendFile(imageResult.imageData(), "output." + imageResult.imageType());
+                if (event.getChannel().getType().isGuild()) {
+                    messageAction = messageAction.content(event.getMember().getAsMention());
                 }
+                messageAction.submit();
             } else {
-                reply(messageReceivedEvent.getChannel(), String.format("Ge snappe het volgensmij niet helemaal hè, %s. Ge motten wel een plaatje erbij uploaden hè? :angry:", messageReceivedEvent.getAuthor().getAsMention()));
+                event.getHook().editOriginal(String.format("Oh nee! deze is te groot voor mij, %s :confounded:", event.getMember().getAsMention())).queue();
             }
         });
     }

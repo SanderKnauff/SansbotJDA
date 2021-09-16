@@ -1,20 +1,13 @@
 package ooo.sansk.sansbot.module.web.login;
 
-import net.dv8tion.jda.api.entities.PrivateChannel;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import nl.imine.vaccine.annotation.Component;
 import ooo.sansk.sansbot.command.ChatCommand;
 import ooo.sansk.sansbot.command.ChatCommandHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Arrays;
-import java.util.List;
 
 @Component
 public class TokenCommand extends ChatCommand {
-
-    private static final Logger logger = LoggerFactory.getLogger(TokenCommand.class);
 
     private final LoginService loginService;
 
@@ -24,29 +17,13 @@ public class TokenCommand extends ChatCommand {
     }
 
     @Override
-    public List<String> getTriggers() {
-        return Arrays.asList("token", "auth");
+    public CommandData getCommandData() {
+        return new CommandData("auth", "Get a token for the web interface");
     }
 
     @Override
-    public void handle(MessageReceivedEvent messageReceivedEvent) {
-        deleteMessageIfPossible(messageReceivedEvent.getMessage());
-        messageReceivedEvent.getAuthor().openPrivateChannel().queue(
-                this::sendUserWebToken,
-                error -> handleOpenPrivateChannelError(error, messageReceivedEvent.getAuthor().getName()));
-    }
-
-    private void sendUserWebToken(PrivateChannel channel) {
-        WebToken token = loginService.createWebToken(channel.getUser().getId());
-        channel.sendMessage("Your WebToken is: " + token.getToken()).queue();
-    }
-
-    private void handleOpenPrivateChannelError(Throwable e, String username) {
-        logger.error(
-                "Could not send token to user '{}' due to not being able to open a private channel. Reason: ({}, {})",
-                username,
-                e.getClass().getSimpleName(),
-                e.getMessage()
-        );
+    public void handle(SlashCommandEvent event) {
+        var token = loginService.createWebToken(event.getUser().getId());
+        event.reply("Your WebToken is:" + token.token()).setEphemeral(true).queue();
     }
 }

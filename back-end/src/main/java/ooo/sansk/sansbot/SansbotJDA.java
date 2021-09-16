@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
-import net.dv8tion.jda.api.AccountType;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -22,10 +21,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.security.auth.login.LoginException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.Scanner;
@@ -38,12 +35,12 @@ public class SansbotJDA {
     private final String botToken;
 
     public static void main(String[] args) {
-        Properties mergedProperties = new Properties();
-        try (InputStream inputStream = Files.newInputStream(Paths.get("application.properties"))) {
-            Properties internalProperties = new Properties();
+        var mergedProperties = new Properties();
+        try (var inputStream = Files.newInputStream(Paths.get("application.properties"))) {
+            var internalProperties = new Properties();
             internalProperties.load(ClassLoader.getSystemResource("default.properties").openStream());
             mergedProperties.putAll(internalProperties);
-            Properties externalProperties = new Properties();
+            var externalProperties = new Properties();
             externalProperties.load(inputStream);
             mergedProperties.putAll(externalProperties);
         } catch (NoSuchFileException e) {
@@ -55,15 +52,14 @@ public class SansbotJDA {
             System.exit(1);
         }
 
-        Vaccine vaccine = new Vaccine();
-        vaccine.inject(mergedProperties, "ooo.sansk.sansbot");
+        new Vaccine().inject(mergedProperties, "ooo.sansk.sansbot");
 
         listenForStopCommand();
     }
 
     private static void createPropertiesFile() {
         try {
-            Path path = Paths.get("application.properties");
+            var path = Paths.get("application.properties");
             Files.createFile(path);
             Files.write(path, "sansbot.token=".getBytes());
         } catch (IOException e) {
@@ -94,8 +90,8 @@ public class SansbotJDA {
 
     @Provided
     public PersistentProperties applicationOptions() {
-        Path persistentPropertiesPath = Paths.get("persistent.properties");
-        PersistentProperties persistentProperties = new PersistentProperties(persistentPropertiesPath);
+        var persistentPropertiesPath = Paths.get("persistent.properties");
+        var persistentProperties = new PersistentProperties(persistentPropertiesPath);
         if(!persistentPropertiesPath.toFile().exists()) {
             try {
                 Files.createFile(persistentPropertiesPath);
@@ -106,7 +102,7 @@ public class SansbotJDA {
                         e.getMessage());
             }
         } else {
-            try (InputStream inputStream = Files.newInputStream(persistentPropertiesPath)){
+            try (var inputStream = Files.newInputStream(persistentPropertiesPath)){
                 persistentProperties.load(inputStream);
             } catch (IOException e) {
                 logger.error("Could not read persistent property storage at {}, continue loading without options ({}: {})",
@@ -120,18 +116,18 @@ public class SansbotJDA {
 
     @Provided
     public ObjectMapper objectMapper() {
-        ObjectMapper objectMapper = new ObjectMapper();
+        var objectMapper = new ObjectMapper();
         objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
         objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
         objectMapper.enable(JsonParser.Feature.ALLOW_SINGLE_QUOTES);
-        SimpleModule serializers = new SimpleModule();
+        var serializers = new SimpleModule();
         serializers.addSerializer(AudioTrack.class, new AudioTrackSerializer());
         objectMapper.registerModule(serializers);
         return objectMapper;
     }
 
     private static void listenForStopCommand() {
-        Scanner scanner = new Scanner(System.in);
+        var scanner = new Scanner(System.in);
         while(scanner.hasNext()) {
             if(scanner.next().equals("stop")) {
                 System.exit(0);

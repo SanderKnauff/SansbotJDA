@@ -1,17 +1,14 @@
 package ooo.sansk.sansbot.command;
 
-import net.dv8tion.jda.api.MessageBuilder;
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.entities.ChannelType;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.MessageChannel;
-import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
+import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import net.dv8tion.jda.internal.utils.PermissionUtil;
 import nl.imine.vaccine.annotation.AfterCreate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.List;
 
 public abstract class ChatCommand {
 
@@ -29,9 +26,9 @@ public abstract class ChatCommand {
         chatCommandHandler.registerCommand(this);
     }
 
-    public abstract List<String> getTriggers();
+    public abstract CommandData getCommandData();
 
-    public abstract void handle(MessageReceivedEvent messageReceivedEvent);
+    public abstract void handle(SlashCommandEvent slashCommandEvent);
 
     public void deleteMessageIfPossible(Message message) {
         if (!message.getChannel().getType().equals(ChannelType.TEXT)) {
@@ -43,17 +40,5 @@ public abstract class ChatCommand {
             return;
         }
         message.delete().queue();
-    }
-
-    public void reply(MessageChannel original, Message reply) {
-        if(original.getType().equals(ChannelType.PRIVATE) || original.getType().equals(ChannelType.GROUP)) {
-            original.sendMessage(reply).queue();
-        } else {
-            chatCommandHandler.getDefaultOutputChannel().sendMessage(reply).queue();
-        }
-    }
-
-    public void reply(MessageChannel original, String reply) {
-        reply(original, new MessageBuilder(reply).build());
     }
 }

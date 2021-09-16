@@ -31,8 +31,8 @@ public class LoginService {
 
     public Optional<WebUserDetails> attemptLogin(Request request, String loginToken) {
         Optional<WebUserDetails> userDetails = requestedTokens.stream()
-                .filter(webToken -> webToken.getToken().equals(loginToken))
-                .filter(webToken -> webToken.getExpirationTime().isAfter(ZonedDateTime.now(clock)))
+                .filter(webToken -> webToken.token().equals(loginToken))
+                .filter(webToken -> webToken.expirationTime().isAfter(ZonedDateTime.now(clock)))
                 .map(this::createUserDetails)
                 .findFirst();
         userDetails.ifPresent(webUserDetails -> request.session().attribute(SessionFilter.SESSION_INFORMATION, createSessionInformation(request.ip())));
@@ -40,7 +40,7 @@ public class LoginService {
     }
 
     public WebToken createWebToken(String id) {
-        requestedTokens.removeIf(webToken -> webToken.getUserId().equals(id));
+        requestedTokens.removeIf(webToken -> webToken.userId().equals(id));
         WebToken newToken = new WebToken(createLoginTokenExpirationTime(), id, generateLoginToken());
         requestedTokens.add(newToken);
         return newToken;
@@ -51,7 +51,7 @@ public class LoginService {
     }
 
     private WebUserDetails createUserDetails(WebToken webToken) {
-        User userDetails = jda.getUserById(webToken.getUserId());
+        User userDetails = jda.getUserById(webToken.userId());
         return new WebUserDetails(userDetails.getName(), userDetails.getAvatarUrl());
     }
 

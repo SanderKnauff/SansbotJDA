@@ -11,17 +11,15 @@ public class MovieLinesGame {
     private final Movie firstAlternativeOption;
     private final Movie secondAlternativeOption;
     private final Queue<Line> lines;
-    private String winningEmote;
     private boolean done;
     private final List<String> reactedUsers;
 
-    public MovieLinesGame(String messageId, Movie winningOption, Movie firstAlternativeOption, Movie secondAlternativeOption, Queue<Line> lines, String winningEmote, boolean done) {
+    public MovieLinesGame(String messageId, Movie winningOption, Movie firstAlternativeOption, Movie secondAlternativeOption, Queue<Line> lines, boolean done) {
         this.messageId = messageId;
         this.winningOption = winningOption;
         this.firstAlternativeOption = firstAlternativeOption;
         this.secondAlternativeOption = secondAlternativeOption;
         this.lines = lines;
-        this.winningEmote = winningEmote;
         this.reactedUsers = new ArrayList<>();
         this.done = done;
     }
@@ -48,14 +46,6 @@ public class MovieLinesGame {
 
     public Queue<Line> getLines() {
         return lines;
-    }
-
-    public String getWinningEmote() {
-        return winningEmote;
-    }
-
-    public void setWinningEmote(String winningEmote) {
-        this.winningEmote = winningEmote;
     }
 
     public boolean isDone() {
