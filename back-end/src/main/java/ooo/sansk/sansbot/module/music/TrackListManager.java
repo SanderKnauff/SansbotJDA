@@ -105,11 +105,6 @@ public class TrackListManager implements AudioEventListener {
         }
     }
 
-    private void queuePlaylist(PlayList playList) {
-        playlistQueue.clear();
-        playlistQueue.addAll(playList.getTrackList());
-    }
-
     public boolean play(AudioTrack track) {
         logger.info("Playing audio track: {}", track.getInfo().title);
         return audioPlayer.startTrack(track, false);
@@ -187,7 +182,7 @@ public class TrackListManager implements AudioEventListener {
 
             @Override
             public void noMatches() {
-                logger.warn("Could not load track \"{}\" in playlist \"{}\"", track.getSource(), currentPlayList.getId());
+                logger.warn("Could not load track \"{}\"", track.getSource());
                 playNextPlayListTrack();
             }
 
