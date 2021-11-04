@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.Nonnull;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 public class ChatCommandHandler implements EventListener {
@@ -35,16 +36,21 @@ public class ChatCommandHandler implements EventListener {
     @Override
     public void onEvent(@Nonnull GenericEvent event) {
         if (event instanceof SlashCommandEvent slashCommandEvent) {
-            for (ChatCommand chatCommand : chatCommands) {
-                if (chatCommand.getCommandData().getName().equalsIgnoreCase(slashCommandEvent.getName())) {
-                    chatCommand.handle(slashCommandEvent);
-                    return;
-                }
-            }
-            slashCommandEvent.reply(
-                String.format("%s, uuhhh... Nee ik denk niet dat ik begrijp wat je van mij wilt...",
-                slashCommandEvent.getMember().getAsMention())
-            ).queue();
+            chatCommands.stream()
+                .filter(command -> command.getCommandData().getName().equalsIgnoreCase(slashCommandEvent.getName()))
+                .findFirst()
+                .ifPresentOrElse(command -> {
+                    if (logger.isInfoEnabled()) logger.info("{} ({}) ran command: /{} {}",
+                        slashCommandEvent.getUser().getName(),
+                        slashCommandEvent.getUser().getId(),
+                        slashCommandEvent.getName(),
+                        slashCommandEvent.getOptions().stream().map(optionMapping -> optionMapping.getName() + "=" + optionMapping.getAsString()).collect(Collectors.joining(", "))
+                    );
+                    command.handle(slashCommandEvent);
+                }, () -> {
+                    logger.info("{} ({}) attempted to run unknown command {}", slashCommandEvent.getUser().getName(), slashCommandEvent.getUser().getId(), slashCommandEvent.getName());
+                    slashCommandEvent.reply(String.format("%s, uuhhh... Nee ik denk niet dat ik begrijp wat je van mij wilt...", slashCommandEvent.getUser().getAsMention())).queue();
+                });
         }
     }
 
