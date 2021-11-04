@@ -15,7 +15,6 @@ import nl.imine.vaccine.annotation.Component;
 import nl.imine.vaccine.annotation.Property;
 import nl.imine.vaccine.annotation.Provided;
 import ooo.sansk.sansbot.options.AudioTrackSerializer;
-import ooo.sansk.sansbot.options.PersistentProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +24,6 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Paths;
 import java.util.Properties;
-import java.util.Scanner;
 
 @Component
 public class SansbotJDA {
@@ -53,15 +51,13 @@ public class SansbotJDA {
         }
 
         new Vaccine().inject(mergedProperties, "ooo.sansk.sansbot");
-
-        listenForStopCommand();
     }
 
     private static void createPropertiesFile() {
         try {
             var path = Paths.get("application.properties");
             Files.createFile(path);
-            Files.write(path, "sansbot.token=".getBytes());
+            Files.writeString(path, "sansbot.token=");
         } catch (IOException e) {
             logger.error("Could not create properties file. Exiting. ({}: {})", e.getClass().getSimpleName(), e.getMessage());
             System.exit(1);
@@ -89,32 +85,6 @@ public class SansbotJDA {
     }
 
     @Provided
-    public PersistentProperties applicationOptions() {
-        var persistentPropertiesPath = Paths.get("persistent.properties");
-        var persistentProperties = new PersistentProperties(persistentPropertiesPath);
-        if(!persistentPropertiesPath.toFile().exists()) {
-            try {
-                Files.createFile(persistentPropertiesPath);
-            } catch (IOException e) {
-                logger.error("Could not create persistent property storage at {}, continue loading without options ({}: {})",
-                        persistentPropertiesPath,
-                        e.getClass().getSimpleName(),
-                        e.getMessage());
-            }
-        } else {
-            try (var inputStream = Files.newInputStream(persistentPropertiesPath)){
-                persistentProperties.load(inputStream);
-            } catch (IOException e) {
-                logger.error("Could not read persistent property storage at {}, continue loading without options ({}: {})",
-                        persistentPropertiesPath,
-                        e.getClass().getSimpleName(),
-                        e.getMessage());
-            }
-        }
-        return persistentProperties;
-    }
-
-    @Provided
     public ObjectMapper objectMapper() {
         var objectMapper = new ObjectMapper();
         objectMapper.disable(SerializationFeature.FAIL_ON_EMPTY_BEANS);
@@ -124,14 +94,5 @@ public class SansbotJDA {
         serializers.addSerializer(AudioTrack.class, new AudioTrackSerializer());
         objectMapper.registerModule(serializers);
         return objectMapper;
-    }
-
-    private static void listenForStopCommand() {
-        var scanner = new Scanner(System.in);
-        while(scanner.hasNext()) {
-            if(scanner.next().equals("stop")) {
-                System.exit(0);
-            }
-        }
     }
 }
