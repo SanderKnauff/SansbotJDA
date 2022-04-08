@@ -1,6 +1,7 @@
 package ooo.sansk.sansbot.module.music.commands;
 
 import net.dv8tion.jda.api.events.interaction.SlashCommandEvent;
+import net.dv8tion.jda.api.interactions.commands.OptionType;
 import net.dv8tion.jda.api.interactions.commands.build.CommandData;
 import nl.imine.vaccine.annotation.Component;
 import ooo.sansk.sansbot.command.ChatCommandHandler;
@@ -18,14 +19,22 @@ public class SkipTrackChatCommand extends AbstractMusicChatCommand {
 
     @Override
     public CommandData getCommandData() {
-        return new CommandData("skip", "Skip the current track");
+        final var data = new CommandData("skip", "Skip the current track");
+        data.addOption(OptionType.NUMBER, "amount", "Amount of numbers to skip (default: 1)", false);
+        return data;
     }
 
     @Override
     public void handle(SlashCommandEvent event) {
+        var toSkip = 1d;
+        var option = event.getOption("amount");
+        if (option != null && option.getType().equals(OptionType.NUMBER) && option.getAsDouble() > 1) {
+            toSkip = option.getAsDouble();
+        }
+
         if (isInSameChannel(event.getMember(), event.getGuild())) {
             event.reply(String.format("Ik kon hier wel van genieten, %s alleen niet. ¯\\_(ツ)_/¯ Ander plaatje dan maar?", event.getMember().getAsMention())).queue();
-            trackListManager.skip();
+            trackListManager.skip((int) toSkip);
         } else {
             event.reply(String.format("Well %s, jij hebt hier toch geen last van. Laat ze lekker luisteren wat ze willen als je het toch niet kan horen... :rolling_eyes:", event.getMember().getAsMention())).queue();
         }

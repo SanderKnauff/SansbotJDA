@@ -12,6 +12,8 @@ import spark.Request;
 import spark.Response;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 @Component
 @Mapping(location = TrackScheduleController.BASE_URL)
@@ -42,8 +44,12 @@ public class TrackScheduleController implements Controller {
     @Mapping(type = MappingType.POST)
     public String postTrack(Request request, Response response) throws IOException {
         String url = new ObjectMapper().readValue(request.body(), ObjectNode.class).get("url").asText();
-        trackListManager.loadTrack(url, "een of andere sukkel over de API");
-        response.body("Added track " + url);
+        try {
+            trackListManager.loadTrack(url, "een of andere sukkel over de API");
+            response.body("Added track " + url);
+        } catch (ExecutionException | InterruptedException | TimeoutException e) {
+            response.body("Failed adding track due to timeout (" + url + ")");
+        }
         return response.body();
     }
 }

@@ -8,6 +8,7 @@ import com.sedmelluq.discord.lavaplayer.player.event.AudioEvent;
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventListener;
 import com.sedmelluq.discord.lavaplayer.player.event.TrackEndEvent;
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers;
+import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager;
 import com.sedmelluq.discord.lavaplayer.tools.FriendlyException;
 import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist;
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack;
@@ -16,12 +17,12 @@ import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.VoiceChannel;
 import nl.imine.vaccine.annotation.AfterCreate;
 import nl.imine.vaccine.annotation.Component;
-import ooo.sansk.sansbot.module.music.playlist.PlayList;
 import ooo.sansk.sansbot.module.music.playlist.Track;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -33,18 +34,15 @@ public class TrackListManager implements AudioEventListener {
     private static final Logger logger = LoggerFactory.getLogger(TrackListManager.class);
 
     private final JDA jda;
-    private final PlayListService playListService;
     private final AudioPlayerManager audioPlayerManager;
-    private final Queue<AudioTrack> queue;
+    private final LinkedList<AudioTrack> queue;
     private final List<Track> playlistQueue;
     private final PlayMode currentPlayMode;
 
     private AudioPlayer audioPlayer;
-    private PlayList currentPlayList;
 
-    public TrackListManager(JDA jda, PlayListService playListService) {
+    public TrackListManager(JDA jda) {
         this.jda = jda;
-        this.playListService = playListService;
         this.audioPlayerManager = new DefaultAudioPlayerManager();
         this.queue = new LinkedList<>();
         this.playlistQueue = new ArrayList<>();
@@ -55,6 +53,7 @@ public class TrackListManager implements AudioEventListener {
     public void afterCreation() {
         AudioSourceManagers.registerLocalSource(audioPlayerManager);
         AudioSourceManagers.registerRemoteSources(audioPlayerManager);
+        audioPlayerManager.source(YoutubeAudioSourceManager.class).setPlaylistPageCount(20);
         Guild guild = jda.getGuilds().get(0);
         for (VoiceChannel voiceChannel : guild.getVoiceChannels()) {
             guild.getAudioManager().openAudioConnection(voiceChannel);
@@ -110,8 +109,15 @@ public class TrackListManager implements AudioEventListener {
         return audioPlayer.startTrack(track, false);
     }
 
-    public void skip() {
+    public void skip(long amountToSkip) {
+        for (long i = 0; i < amountToSkip - 1; i++) {
+            queue.poll();
+        }
         audioPlayer.stopTrack();
+    }
+
+    public void shuffle() {
+        Collections.shuffle(queue);
     }
 
     public boolean pause() {

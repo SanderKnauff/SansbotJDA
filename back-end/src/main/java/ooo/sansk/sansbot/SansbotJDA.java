@@ -79,6 +79,9 @@ public class SansbotJDA {
             logger.info("Creating JDA...");
             final JDA jda = JDABuilder.create(botToken, GatewayIntent.getIntents(GatewayIntent.ALL_INTENTS)).build().awaitReady();
             logger.info("JDA created");
+
+            Runtime.getRuntime().addShutdownHook(new Thread(jda::shutdown));
+
             return jda;
         } catch (InterruptedException | LoginException e) {
             logger.error("Failed to create JDA", e);

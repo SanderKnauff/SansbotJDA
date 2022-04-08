@@ -55,7 +55,7 @@ public class ChatCommandHandler implements EventListener {
     }
 
     public void registerCommand(ChatCommand chatCommand) {
-        jda.upsertCommand(chatCommand.getCommandData()).queue();
+        jda.getGuilds().get(0).upsertCommand(chatCommand.getCommandData()).queue();
         chatCommands.add(chatCommand);
     }
 }

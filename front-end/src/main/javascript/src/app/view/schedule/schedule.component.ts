@@ -1,7 +1,5 @@
 import {Component, OnInit, ViewEncapsulation} from '@angular/core';
-import {Endpoints} from "../../core/endpoints";
 import {Track} from "../../model/track";
-import {HttpClient} from "@angular/common/http";
 import {ScheduleService} from "./schedule.service";
 import {Observable} from "rxjs/index";
 

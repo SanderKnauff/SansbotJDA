@@ -36,6 +36,7 @@ public class PlayTrackChatCommand extends AbstractMusicChatCommand {
             event.reply(String.format("Zeg %s Ik kan niet dingen op de playlist zetten als je me niet zegt wat hè?! :shrug:", event.getMember().getAsMention())).queue();
             return;
         }
+
         var url = sourceOption.getAsString();
         if (!url.matches(".*")) {
             event.reply(String.format("Maarree %s, dit is niet een linkje waar ik iets mee kan hè? :rolling_eyes:", event.getMember().getAsMention())).queue();
