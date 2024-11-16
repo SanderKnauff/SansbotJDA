@@ -47,3 +47,5 @@ resources/
 
 #Don't ignore source files
 !src/*
+../src/main/resources/public
+back-end/target/
